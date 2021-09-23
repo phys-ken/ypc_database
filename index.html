@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CSV Reader</title>
+    <title>YPC Database</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://jenil.github.io/bulmaswatch/default/bulmaswatch.min.css" />
@@ -59,27 +59,10 @@
                     </p>
                 </div>
 
-                <div class="control">
-                    <label>
-                        <input v-model="numSearchMode" type="checkbox">
-                        数値データオプション：
-                    </label>
-                    <label class="radio">
-                        <input v-model="numSearchCondition" type="radio" name="num_condition" value="eq">
-                        等しい
-                    </label>
-                    <label class="radio">
-                        <input v-model="numSearchCondition" type="radio" name="num_condition" value="gt">
-                        以上
-                    </label>
-                    <label class="radio">
-                        <input v-model="numSearchCondition" type="radio" name="num_condition" value="le">
-                        以下
-                    </label>
-                </div>
+
             </div>
 
-            <a href = "https://phys-ken.github.io/ypc_database/README.html">検索システムトップにもどる</a>
+            <a href="https://phys-ken.github.io/ypc_database/README.html">検索システムトップにもどる</a>
 
             <!-- <div class="hero-body"> -->
             <div style="padding: 0 20px 0 20px;">
@@ -126,7 +109,7 @@
                 numSearchParams: ['eq', 'gt', 'le'],
                 searchNumMode: false,
                 csvPathList: [
-                    { btnName: 'data1', csvPath: 'csv/ypclog_20210920_130402.csv' }
+                    { btnName: 'data1', csvPath: 'csv/ypclog_20210923_111536.csv' }
                 ]
             },
 

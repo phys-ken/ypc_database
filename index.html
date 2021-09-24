@@ -81,7 +81,12 @@
                         </thead>
                         <tbody v-for="row in csvData">
                             <tr>
-                                <td v-for="(col, index) in csvCols">{{row[index]}}</td>
+                                <td v-for="(col, index) in csvCols">
+                                    <router-link to="/work">
+                                       <div v-if="index == 4"> <a  href="#" v-on:click="openLinkInNewTab(row[4])"> {{row[index]}} </a> </div>
+                                        <div v-else> {{row[index]}} </div>
+                                    </router-link>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -223,11 +228,17 @@
                     console.log(this.csvData);
                 },
 
+                openLinkInNewTab(url) {
+                    window.open(url, '_blank')
+                },
+
                 SearchBoxEnterkey: function (event) {
                     // 日本語入力中のEnterキー操作は無効にする
                     if (event.keyCode !== 13) { return }
                     this.ColSearch();
                 }
+
+
             },
 
             mounted: function () {

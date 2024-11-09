@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CSV Search</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/vue-simple-suggest"></script>
+    <script src="https://unpkg.com/vuejs-paginate@2.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/js/bulma-extensions.min.js"></script>
+    <script src="https://kit.fontawesome.com/7dc3015a44.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/vue-simple-suggest/dist/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/bulma@0.9.3/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/css/bulma-extensions.min.css">
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar has-shadow is-fixed-top">
+            <div class="container">
+                <div class="navbar-brand">
+                    <p class="navbar-item">{{ csvTitle }}</p>
+                    <p class="navbar-item">
+                        <paginate class="navbar-item" :page-count="getPageCount" :page-range="1" :margin-pages="0"
+                            :click-handler="paginateClickCallback" :prev-text="'＜'" :next-text="'＞'"
+                            :container-class="'pagination-list'" :active-class="'pagination-active'"
+                            :page-link-class="'pagination-link'" :page-class="'page-item'">
+                        </paginate>
+                    </p>
+
+                    <p class="navbar-item">{{ parPage * (currentPage - 1) + '〜' + parPage * currentPage + ' / ' + filteredItems.length }}</p>
+                    <div class="navbar-burger burger" @click="isOpenMenu = !isOpenMenu">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <div class="navbar-menu" :class="{ 'is-active': isOpenMenu }">
+                    <div class="navbar-end">
+                        <div class="navbar-item has-dropdown is-hoverable"><a class="navbar-link">Menu</a>
+                            <div class="navbar-dropdown">
+                                <hr class="navbar-divider" />
+                                <a class="navbar-item">
+                                    <span class="icon">
+                                        <i class="fa fa-upload"></i>
+                                    </span>
+                                    <span>import</span>
+                                    <input style="cursor: hand" class="file-input" @change="OpenDialog" type="file"
+                                        accept=".csv" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <section class="hero is-info mt-6">
+            <div class="hero-body">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="content">
+                                <div class="control has-icons-left has-icons-right">
+                                    <vue-simple-suggest v-model="searchWord" :list="suggestList"
+                                        :filter-by-query="true">
+                                    </vue-simple-suggest>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mt-4">
+                        <header class="card-header" @click="isOpenSearchOption = !isOpenSearchOption">
+                            <p class="card-header-title">
+                                Search Option
+                            </p>
+                            <button class="card-header-icon" aria-label="more options">
+                                <span class="icon">
+                                    <i class="fas"
+                                        :class="{ 'fa-angle-down': isOpenSearchOption, 'fa-angle-right': !isOpenSearchOption }"
+                                        aria-hidden="true">
+                                    </i>
+                                </span>
+                            </button>
+                        </header>
+                        <template v-if="isOpenSearchOption">
+                            <div class="card-content">
+                                <div class="content">
+                                    <div class="field" v-for="(col, index) in csvColsObj">
+                                        <label class="label checkbox">
+                                            {{ col.name }}
+                                        </label>
+                                        <div class="field">
+                                            <div class="control">
+                                                <label class="checkbox">
+                                                    <input type="checkbox" v-model="col.isSearchNumber" checked="checked">
+                                                    数値比較：
+                                                </label>
+                                                <template v-if="col.isSearchNumber">
+                                                    <label class="radio">
+                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'eq')" checked="checked">
+                                                        同じ
+                                                    </label>
+                                                    <label class="radio">
+                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'ge')" value="ge">
+                                                        以上
+                                                    </label>
+                                                    <label class="radio">
+                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'le')" value="le">
+                                                        以下
+                                                    </label>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="control">
+                                            <vue-simple-suggest v-model="col.searchWord" :list="col.suggestList"
+                                                :filter-by-query="true">
+                                            </vue-simple-suggest>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <footer class="card-footer">
+                                <a class="card-footer-item" @click="gridClass = 'is-3'">4 grid</a>
+                                <a class="card-footer-item" @click="gridClass = 'is-4'">3 grid</a>
+                                <a class="card-footer-item" @click="gridClass = 'is-6'">2 grid</a>
+                                <a class="card-footer-item" @click="gridClass = 'is-12'">no grid</a>
+                            </footer>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="box cta">
+            <div class="columns is-mobile is-centered">
+                <div class="field is-grouped is-grouped-multiline">
+                    <div class="control" v-for="colObj in csvColsObj">
+                        <span class="tag is-large button"
+                            :class="{'is-black': colObj.isDisplay, 'is-light': !colObj.isDisplay }"
+                            @click="colObj.isDisplay = !colObj.isDisplay">
+                            {{ colObj.name }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="container">
+            <div class="level-item">
+                <div class="columns is-multiline is-centered cards-container is-mobile" id="sectioncontainer">
+                    <div class="column" :class="[getItems.length > 2 ? gridClass : 'is-12' ]"
+                        v-for="rowItem in getItems">
+                        <article class="message is-black p-3">
+                            <div class="message-body">
+                                <div class="board-item" v-for="(cellItem, index) in rowItem">
+                                    <div class="board-item-content">
+                                        <div class="board-item" v-if="csvColsObj[index].isDisplay">
+                                            <div class="board-item-content">
+                                                <span>
+                                                    <strong>{{ csvColsObj[index].name }}</strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="board-item mb-3" v-if="csvColsObj[index].isDisplay">
+                                            <div class="board-item-content"
+                                                :class="{'has-text-link-dark': cellItem && cellItem.includes('http')}"
+                                                @click="if (cellItem.includes('http')) {window.open(cellItem, '_blank')}">
+                                                <span>{{ cellItem.includes('http') ? '[Open Link]' : cellItem }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+</body>
+<script>
+    Vue.component('paginate', VuejsPaginate)
+    new Vue({
+        el: "#app",
+        data: {
+            isOpenMenu: false,
+            isOpenSearchOption: false,
+            gridClass: 'is-4',
+            parPage: 20,
+            currentPage: 1,
+            csvTitle: '',
+            csvCols: [],
+            csvColsObj: [],
+            csvData: [],
+            allCsvData: [],
+            numSearchCols: [],
+            searchWord: '',
+            suggestList: [],
+        },
+        methods: {
+            OpenDialog(csvEv) {
+                const file = csvEv.target.files[0]
+                const reader = new FileReader()
+                this.csvTitle = file.name
+                reader.onload = (inputCsv) => {
+                    const res = inputCsv.target.result;
+                    this.ConvertCsv(res);
+                };
+                reader.readAsText(file, "Shift_JIS");
+            },
+            ConvertCsv(csvData) {
+                Papa.parse(csvData, {
+                    complete: (results) => {
+                        this.csvCols = results.data[0]
+                        this.csvData = results.data.slice(1)
+                        this.allCsvData = results.data.slice(1)
+                    },
+                })
+                this.setCsvColsObj()
+            },
+            RequestCsvPath(csvPath) {
+                new Promise((resolve, reject) => {
+                    const httpReq = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成、サーバと非同期通信するためのAPI
+                    httpReq.open("get", csvPath, true); // アクセスするファイルを指定
+                    httpReq.overrideMimeType("text/plain; charset=Shift_JIS");
+                    httpReq.onload = () => {
+                        this.csvTitle = csvPath;
+                        this.ConvertCsv(httpReq.responseText)
+                        resolve()
+                    };
+                    httpReq.onerror = () => {
+                        reject(new Error(httpReq.statusText));
+                    };
+                    httpReq.send(null); // HTTPリクエストの発行
+                });
+            },
+            paginateClickCallback(pageNum) {
+                this.currentPage = Number(pageNum);
+            },
+            setCsvColsObj() {
+                this.csvColsObj = []
+                this.csvCols.forEach((col, index) => {
+                    let colSuggestList = []
+                    this.filteredItems.forEach(csvRow => {
+                        colSuggestList.push(csvRow[index])
+                        this.suggestList.push(csvRow[index])
+                    })
+                    colSuggestList = Array.from(new Set(colSuggestList))
+                    this.suggestList = Array.from(new Set(this.suggestList))
+
+                    this.csvColsObj.push({
+                        name: col,
+                        isSearch: true,
+                        isSearchNumber: false,
+                        isDisplay: true,
+                        searchWord: '',
+                        suggestList: colSuggestList
+                    })
+                    // 数値検索のモードの初期値を設定する
+                    this.numSearchCols.push('eq')
+                })
+            },
+            setNumSearchCol(index, searchMode) {
+                this.numSearchCols[index] = searchMode
+                // this.csvColsObj[index] = this.csvColsObj[index]
+                const tmpSearchWord = this.searchWord
+                this.searchWord = this.searchWord + 'dummy'
+                this.searchWord = tmpSearchWord
+            }
+        },
+        mounted() {
+            this.RequestCsvPath('csv/ypclog_20241109_142838.csv')
+        },
+        computed: {
+            getItems() {
+                const current = this.currentPage * this.parPage;
+                const start = current - this.parPage;
+                return this.filteredItems.slice(start, current);
+            },
+            filteredItems() {
+                let csvResult = this.csvData
+                if (this.searchWord) {
+                    csvResult = csvResult.filter(csvRow => {
+                        return csvRow.filter(csvCol =>
+                            csvCol.includes(this.searchWord)
+                        ).length > 0
+                    })
+                }
+                this.csvColsObj.forEach((colObj, index) => {
+                    if (!colObj.isSearchNumber && colObj.searchWord) {
+                        csvResult = csvResult.filter(csvRow => {
+                            return csvRow.filter(csvCol =>
+                                csvCol.includes(colObj.searchWord)
+                            ).length > 0
+                        })
+                    }
+                    if (colObj.isSearchNumber && colObj.searchWord) {
+                        const searchNum = isFinite(colObj.searchWord) ? Number(colObj.searchWord) : 0
+                        csvResult = csvResult.filter(csvRow => {
+                                return csvRow.filter(csvCol => {
+                                    const csvColNum = isFinite(csvCol) ? Number(csvCol) : null
+                                    if (!csvColNum) return false
+
+                                    if (this.numSearchCols[index] === 'eq') {
+                                        return csvColNum === searchNum
+                                    }
+                                    if (this.numSearchCols[index] === 'ge') {
+                                        return csvColNum >= searchNum
+                                    }
+                                    if (this.numSearchCols[index] === 'le') {
+                                        return csvColNum <= searchNum
+                                    }
+                                }
+                            ).length > 0
+                        })
+                    }
+                })
+                return csvResult
+            },
+            getPageCount() {
+                let pageCount = Math.ceil(this.filteredItems.length / this.parPage)
+                if (this.currentPage > pageCount) {
+                    this.currentPage = 1
+                }
+                return pageCount
+            },
+        }
+    })
+
+</script>
+
+<style>
+    #sectioncontainer {
+        margin-top: 20px;
+    }
+
+    /* Keep from sticking to sides */
+    /* .cards-container {
+        max-width: 95%;
+    }
+
+    .board-item {
+        margin: 5px 0;
+        will-change: transform;
+    }
+
+    .board-item-content {
+        word-break: break-all;
+        position: relative;
+        padding: 20px;
+        background: #fff;
+        border-radius: 4px;
+        font-size: 17px;
+        text-align: center;
+        cursor: pointer;
+        -webkit-box-shadow: 0px 1px 3px 0 rgba(0, 0, 0, 0.2);
+        box-shadow: 0px 1px 3px 0 rgba(0, 0, 0, 0.2);
+        margin: 5px;
+    }
+
+    .delete {
+        pointer-events: auto;
+    }
+
+    footer {
+        margin-top: 2rem;
+    } */
+    div.navbar-brand>ul>li.page-item.is-active>a {
+        background-color: #485fc7 !important;
+        border-color: #485fc7 !important;
+        color: #fff !important;
+    }
+
+    .pagination-active {
+        background-color: #485fc7 !important;
+        border-color: #485fc7;
+        color: #fff;
+    }
+</style>
+
+
+</html>

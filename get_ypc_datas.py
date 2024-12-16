@@ -65,9 +65,9 @@ print("スクレイピングが終了しました。")
 df = pd.DataFrame()
 
 for i in range(len(url_list)):
-    df_tmp = pd.DataFrame(url_list[i][2], columns=["theme", "text"])
-    df_tmp["title"] = url_list[i][0]
-    df_tmp["url"] = url_list[i][1]
+    df_tmp = pd.DataFrame(url_list[i][2], columns=["発表タイトル", "本文"])
+    df_tmp["日時"] = url_list[i][0]
+    df_tmp["URL"] = url_list[i][1]
     df = pd.concat([df, df_tmp])
 
 # indexをNo.として1列目に追加し、reset_indexを使ってデータフレームをリセット

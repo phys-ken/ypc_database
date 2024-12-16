@@ -24,6 +24,12 @@ url_list = []
 for title in titles:
     url_list.append([title.get_text(), top_url + title.get("href")])
 
+# テスト用
+#for i in range(2):
+#   title = titles[i]
+#   url_list.append([title.get_text(), top_url + title.get("href")])
+
+
 print("全部で" + str(len(url_list)) + "回処理を行います。")
 
 # 各URLページから情報を取得
@@ -84,5 +90,6 @@ if not os.path.exists(save_folder):
 now = datetime.datetime.now()
 filename = os.path.join(save_folder, 'ypclog_' + now.strftime('%Y%m%d_%H%M%S') + '.csv')
 df.to_csv(filename, encoding='utf-8-sig')
+
 
 print(f"データは {filename} に保存されました。")

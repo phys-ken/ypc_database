@@ -29,8 +29,9 @@
                         </paginate>
                     </p>
 
-                    <p class="navbar-item">{{ parPage * (currentPage - 1) + '〜' + parPage * currentPage + ' / ' + filteredItems.length }}</p>
-                    <div class="navbar-burger burger" @click="isOpenMenu = !isOpenMenu">
+                    <p class="navbar-item">{{ parPage * (currentPage - 1) + '〜' + parPage * currentPage + ' / ' +
+                        filteredItems.length }}</p>
+                    <div class="navbar-burger burger" @click="isOpenMenu = !isOpenMenu" style="display: none;">
                         <span></span><span></span><span></span>
                     </div>
                 </div>
@@ -91,20 +92,24 @@
                                         <div class="field">
                                             <div class="control">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" v-model="col.isSearchNumber" checked="checked">
+                                                    <input type="checkbox" v-model="col.isSearchNumber"
+                                                        checked="checked">
                                                     数値比較：
                                                 </label>
                                                 <template v-if="col.isSearchNumber">
                                                     <label class="radio">
-                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'eq')" checked="checked">
+                                                        <input type="radio" :name="col.name + index"
+                                                            @change="setNumSearchCol(index, 'eq')" checked="checked">
                                                         同じ
                                                     </label>
                                                     <label class="radio">
-                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'ge')" value="ge">
+                                                        <input type="radio" :name="col.name + index"
+                                                            @change="setNumSearchCol(index, 'ge')" value="ge">
                                                         以上
                                                     </label>
                                                     <label class="radio">
-                                                        <input type="radio" :name="col.name + index" @change="setNumSearchCol(index, 'le')" value="le">
+                                                        <input type="radio" :name="col.name + index"
+                                                            @change="setNumSearchCol(index, 'le')" value="le">
                                                         以下
                                                     </label>
                                                 </template>
@@ -159,10 +164,14 @@
                                             </div>
                                         </div>
                                         <div class="board-item mb-3" v-if="csvColsObj[index].isDisplay">
-                                            <div class="board-item-content"
-                                                :class="{'has-text-link-dark': cellItem && cellItem.includes('http')}"
-                                                @click="if (cellItem.includes('http')) {window.open(cellItem, '_blank')}">
-                                                <span>{{ cellItem.includes('http') ? '[Open Link]' : cellItem }}</span>
+                                            <div class="board-item-content">
+                                                <span v-if="cellItem && cellItem.match(/^https?:\/\/\S+$/)"
+                                                    @click="window.open(cellItem, '_blank')">
+                                                    [元のページへ移動(クリック)]
+                                                </span>
+                                                <span v-else>
+                                                    {{ cellItem }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -294,20 +303,20 @@
                     if (colObj.isSearchNumber && colObj.searchWord) {
                         const searchNum = isFinite(colObj.searchWord) ? Number(colObj.searchWord) : 0
                         csvResult = csvResult.filter(csvRow => {
-                                return csvRow.filter(csvCol => {
-                                    const csvColNum = isFinite(csvCol) ? Number(csvCol) : null
-                                    if (!csvColNum) return false
+                            return csvRow.filter(csvCol => {
+                                const csvColNum = isFinite(csvCol) ? Number(csvCol) : null
+                                if (!csvColNum) return false
 
-                                    if (this.numSearchCols[index] === 'eq') {
-                                        return csvColNum === searchNum
-                                    }
-                                    if (this.numSearchCols[index] === 'ge') {
-                                        return csvColNum >= searchNum
-                                    }
-                                    if (this.numSearchCols[index] === 'le') {
-                                        return csvColNum <= searchNum
-                                    }
+                                if (this.numSearchCols[index] === 'eq') {
+                                    return csvColNum === searchNum
                                 }
+                                if (this.numSearchCols[index] === 'ge') {
+                                    return csvColNum >= searchNum
+                                }
+                                if (this.numSearchCols[index] === 'le') {
+                                    return csvColNum <= searchNum
+                                }
+                            }
                             ).length > 0
                         })
                     }
